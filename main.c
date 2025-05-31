@@ -10,9 +10,9 @@
 #include "spl06_001_hal.h"
 void SystemClock_Config(void);
 
-float temperature; // 读取的温度值 单位℃摄氏度
-float pressure;   // 温度补偿后的气压值 单位mpar 毫帕
-uint32_t baro_height; // 解算后的气压高度值，单位mm毫米
+float temperature; 
+float pressure;   
+uint32_t baro_height; 
 int _write(int fd, char *ptr, int len) {
     HAL_UART_Transmit(&huart1, (uint8_t*)ptr, len, HAL_MAX_DELAY);
     return len;
@@ -28,39 +28,39 @@ int main(void) {
     HAL_TIM_Base_Start_IT(&htim6);
     HAL_Delay(2000);
 
-    // 初始化SPL06-001
+    
     if(spl06_init() != 0)
        {
-           printf("SPL06初始化失败！\r\n");
+           printf("SPL06 init failed\r\n");
            while(1);
        }
-    printf("SPL06初始化！\r\n");
+    printf("SPL06 init ok！\r\n");
 
        while(1)
        {
     	   temperature=user_spl06_get_temperature();
     	   pressure=user_spl06_get_pressure();
-           printf("气压计内部温度为：%.1f℃\r\n", temperature); // 发送海拔高度数据到串口助手
-           printf("温度补偿后的气压值为：%.1fmpar\r\n", pressure); // 发送海拔高度数据到串口助手
+           printf("tem：%.1f℃\r\n", temperature); 
+           printf("pre：%.1fmpar\r\n", pressure); 
 
            printf("\r\n\r\n\r\n");
            HAL_Delay(1000) ;
-           // 高度读取程序都在3ms定时器中断里面运行
+           
        }
    }
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef  *htim) // TIM6中断
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef  *htim) 
 {
-    if (htim->Instance==TIM6) // 检查指定的TIM中断发生与否: TIM 中断源
+    if (htim->Instance==TIM6) 
     {
         static uint8_t cnt_12ms = 0;
 
         cnt_12ms++;
-        if(cnt_12ms > 4) // 3ms中断*4 = 12ms每次读取
+        if(cnt_12ms > 4) 
         {
             cnt_12ms = 0;
             temperature = user_spl06_get_temperature();
             pressure = user_spl06_get_pressure();
-            baro_height = (uint32_t)((102000.0f - pressure) * 78.740f); // 每1mpar平均海拔高度为78.740mm
+            baro_height = (uint32_t)((102000.0f - pressure) * 78.740f); 
         }
     }
 
